@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import bannerImage1 from "../assets/image/banner1.png";
 import bannerImage2 from "../assets/image/banner2.png";
 import backtohome from "../assets/image/backtohome.png";
@@ -32,11 +32,28 @@ import kad from "../assets/image/kad.pdf";
 import dla from "../assets/image/dla.pdf";
 import reflect from "../assets/image/reflect.png";
 
-
 const Interview = () => {
     const navigate = useNavigate();
     const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
     const [currentVideoUrl, setCurrentVideoUrl] = useState("");
+    const [userCountry, setUserCountry] = useState<string | null>(null);
+
+    // Determine user geolocation via IP on mount
+    useEffect(() => {
+        fetch("https://ipapi.co/json/")
+            .then((res) => res.json())
+            .then((data) => {
+                if (data && data.country_code) {
+                    setUserCountry(data.country_code);
+                } else {
+                    setUserCountry(null);
+                }
+            })
+            .catch((err) => {
+                console.error("Geolocation fetch error:", err);
+                setUserCountry(null);
+            });
+    }, []);
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
@@ -47,9 +64,6 @@ const Interview = () => {
         else if (theme === "future") navigate("/future");
     };
 
-    // ============================================
-    // ✨ UPDATED: Added unique alt text for each video
-    // ============================================
     const videos = [
         {
             id: "video1",
@@ -57,15 +71,29 @@ const Interview = () => {
             title: "Ask the right questions",
             desc: "Learn what questions to ask in an interview to show initiative.",
             alt: "Video thumbnail: Ask the right questions video",
-            youtubeUrl:
-                "https://play.webvideocore.net/popplayer.php?it=2s8paki17ois&is_link=1&auto_play=0&aspect_ratio=16:9",
-        },
+            // All three sources
+            urls: {
+                india: "https://www.youtube.com/embed/bAuMjFsX1b0?list=PLECughgtWWpTUwbD0uwK3EUKVdaUyQLN_",
+                global: "https://www.youtube.com/embed/tMoRNjRi7Ck",
+                china: "https://play.webvideocore.net/popplayer.php?it=2s8paki17ois&is_link=1&auto_play=0&aspect_ratio=16:9"
+            }
+        }
     ];
 
+    const getVideoUrlForCountry = (video: typeof videos[number]): string => {
+        if (userCountry === "IN") {
+            return video.urls.india;
+        } else if (userCountry === "CN") {
+            return video.urls.china;
+        } else {
+            return video.urls.global;
+        }
+    };
 
-
-    const handlePlayVideo = (youtubeUrl: string) => {
-        setCurrentVideoUrl(youtubeUrl);
+    const handlePlayVideo = () => {
+        const video = videos[0];  // since you only have one video in array
+        const selectedUrl = getVideoUrlForCountry(video);
+        setCurrentVideoUrl(selectedUrl);
         setIsVideoModalOpen(true);
     };
 
@@ -90,14 +118,22 @@ const Interview = () => {
                 </div>
                 <div className="margin-acca container mx-auto relative z-10 flashcard-banner">
                     <div className="">
-                        <h1 className="" style={{ fontSize: '70px', lineHeight: '60px', color: "#ffff", whiteSpace: "0%", fontWeight: 700 }}>
+                        <h1 className=""
+                            style={{
+                                fontSize: '70px',
+                                lineHeight: '60px',
+                                color: "#ffff",
+                                whiteSpace: "0%",
+                                fontWeight: 700
+                            }}
+                        >
                             Interview Prep Series<span style={{ color: '#D20024' }}>.</span>
                         </h1>
                     </div>
                 </div>
             </section>
 
-            {/* Sidebar Mobile*/}
+            {/* Sidebar Mobile */}
             <div className="inter-breadcrumbs">
                 <div className="w-screen max-w-none col-span-2 space-y-0 sidebar-mobile display-side relative left-1/2 -translate-x-1/2 sm:static sm:w-full sm:max-w-full">
                     <a href="" className="cursor-pointer block navigation">
@@ -107,7 +143,7 @@ const Interview = () => {
                 </div>
             </div>
 
-            {/* Main Content of the page */}
+            {/* Main Content */}
             <section className="pt-10 pb-6 interview-page">
                 <div className="custom-container">
                     <div className="grid grid-cols-12 gap-6 max-w-7xl mx-auto mobile-flex">
@@ -124,7 +160,9 @@ const Interview = () => {
                                     />
                                     <span style={{ fontSize: "16px", fontWeight: "500" }}>Back to</span>
                                     <br />
-                                    <span className="home-align" style={{ fontSize: "22px", fontWeight: "500" }}> Home</span>
+                                    <span className="home-align"
+                                        style={{ fontSize: "22px", fontWeight: "500" }}
+                                    > Home</span>
                                 </div>
                             </a>
 
@@ -146,10 +184,7 @@ const Interview = () => {
                                 Interviews can be your gateway to success, but only when you're well prepared. ACCA's Interview Prep Series equips you with the tools to approach every stage of the process with clarity, confidence, and professionalism. Whether you're entering the workforce or ready to take your next step, this series supports you in building skills that stand out.
                             </p>
 
-                            {/* Video Grid - 2 columns */}
-                            {/* ============================================ */}
-                            {/* ✨ UPDATED: Using video.alt instead of template literal */}
-                            {/* ============================================ */}
+                            {/* Video Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 row-gaps">
                                 {videos.map((video, index) => (
                                     <div key={index} className="flex flex-col">
@@ -160,14 +195,12 @@ const Interview = () => {
                                                     alt={video.alt}
                                                     className="w-full h-full object-cover"
                                                 />
-                                                {/* Image Overlay */}
                                                 <div
                                                     className="absolute inset-0"
                                                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}
                                                 ></div>
-                                                {/* Play Button Overlay */}
                                                 <button
-                                                    onClick={() => handlePlayVideo(video.youtubeUrl)}
+                                                    onClick={() => handlePlayVideo()}
                                                     className="absolute inset-0 flex items-center justify-center"
                                                 >
                                                     <div className="w-auto h-auto flex items-center justify-center hover:scale-110 transition-transform">
@@ -193,7 +226,7 @@ const Interview = () => {
                 </div>
             </section>
 
-            {/* YouTube Video Modal */}
+            {/* Video Modal */}
             <Dialog open={isVideoModalOpen} onOpenChange={setIsVideoModalOpen}>
                 <DialogContent className="max-w-none w-screen h-screen p-0 bg-color">
                     <DialogClose asChild>
@@ -211,9 +244,9 @@ const Interview = () => {
                                     src={currentVideoUrl}
                                     className="w-full h-full"
                                     frameBorder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allow="autoplay; fullscreen; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
-                                    title="YouTube Video"
+                                    title="Interview Prep Video"
                                 />
                             )}
                         </div>
